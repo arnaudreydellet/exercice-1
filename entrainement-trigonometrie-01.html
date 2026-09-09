@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="fr" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F9FD">
+<meta name="color-scheme" content="light">
+<title>Exercice 1 — Repérer les côtés d’un triangle rectangle</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>document.documentElement.classList.replace('no-js','js');</script>
+
+<style>
+/* =============================================================
+   1. JETONS — charte Stud'Éval
+   Vert : uniquement une réponse validée. Rouge doux : uniquement une erreur.
+   ============================================================= */
+:root {
+  --se-blue:      #2F63F5;
+  --se-blue-700:  #244FCC;
+  --se-blue-300:  #93B4FD;
+  --se-blue-200:  #C6D4FD;
+  --se-blue-100:  #E6EDFF;
+  --se-blue-50:   #F3F6FE;
+  --se-ink:       #0B1526;
+  --se-ink-2:     #4A5878;
+  --se-ink-3:     #8A96B3;
+  --se-line:      #DDE4F2;
+  --se-line-2:    #E9EEF8;
+  --se-bg:        #F7F9FD;
+  --se-card:      #FFFFFF;
+  --se-ok:        #1B9E5A;
+  --se-ok-700:    #157A46;
+  --se-ok-100:    #DFF5E8;
+  --se-err:       #D9534F;
+  --se-err-100:   #FDECEC;
+
+  --r-card: 18px;
+  --r-btn:  12px;
+  --font: 'Sora', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --math: 'Times New Roman', Times, serif;
+  --ease: cubic-bezier(.22,.8,.22,1);
+
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+/* =============================================================
+   2. BASE
+   ============================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100dvh;
+  font-family: var(--font); color: var(--se-ink);
+  background: var(--se-bg); overflow-x: hidden;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(to right,  rgba(47,99,245,.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(47,99,245,.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.25) 100%);
+          mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.25) 100%);
+}
+.app {
+  position: relative; z-index: 1;
+  min-height: 100dvh; display: flex; flex-direction: column;
+  max-width: 760px; margin: 0 auto;
+  padding: calc(16px + var(--sat)) calc(16px + var(--sar)) calc(20px + var(--sab)) calc(16px + var(--sal));
+}
+@media (min-width: 760px) {
+  .app { padding: calc(26px + var(--sat)) calc(32px + var(--sar)) calc(24px + var(--sab)) calc(32px + var(--sal)); }
+}
+
+/* =============================================================
+   3. EN-TÊTE
+   ============================================================= */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 32px; }
+.brand { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--se-blue); font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+.brand svg { width: 22px; height: 18px; display: block; }
+.badge { display: inline-flex; align-items: center; padding: 6px 11px; border-radius: 999px; background: var(--se-blue-100); color: var(--se-blue-700); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.retour {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  margin-top: 18px; min-height: 40px; padding: 0 4px;
+  color: var(--se-ink-2); font-size: 14px; font-weight: 500; text-decoration: none;
+  border-radius: 8px; transition: color .25s;
+}
+.retour svg { width: 16px; height: 16px; transition: transform .3s var(--ease); }
+.retour:hover { color: var(--se-blue); }
+.retour:hover svg { transform: translateX(-3px); }
+.retour:focus-visible { outline: 3px solid var(--se-blue); outline-offset: 2px; }
+.contexte { margin: 10px 0 0; font-size: 13px; font-weight: 500; color: var(--se-ink-3); }
+
+/* =============================================================
+   4. LA CARTE D'EXERCICE — un seul cadre, trois écrans dedans
+   ============================================================= */
+.cadre {
+  margin-top: 12px;
+  background: var(--se-card); border: 1px solid var(--se-line); border-radius: var(--r-card);
+  box-shadow: 0 1px 2px rgba(11,21,38,.04), 0 8px 22px -14px rgba(11,21,38,.12);
+  padding: 20px 18px 22px;
+}
+@media (min-width: 560px) { .cadre { padding: 26px 28px 28px; } }
+.ecran { display: none; }
+.ecran.actif { display: block; animation: rise .45s var(--ease); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+h1, h2 { margin: 0; letter-spacing: -.02em; line-height: 1.15; }
+h1 { font-size: clamp(22px, 5.4vw, 30px); font-weight: 700; }
+h2 { font-size: clamp(22px, 5.4vw, 28px); font-weight: 700; }
+.texte { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--se-ink-2); }
+.texte b { color: var(--se-ink); font-weight: 600; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  min-height: 48px; padding: 12px 20px; border: 0; border-radius: var(--r-btn);
+  background: var(--se-blue); color: #fff; font: inherit; font-weight: 600; font-size: 15.5px;
+  cursor: pointer; text-decoration: none; transition: background .25s, transform .3s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.btn svg { width: 17px; height: 17px; }
+.btn:hover { background: var(--se-blue-700); }
+.btn:active { transform: scale(.985); }
+.btn:focus-visible { outline: 3px solid var(--se-blue); outline-offset: 3px; }
+.btn--secondaire { background: var(--se-card); color: var(--se-blue); border: 1px solid var(--se-blue-200); }
+.btn--secondaire:hover { background: var(--se-blue-50); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+@media (max-width: 480px) { .actions .btn { flex: 1 1 100%; } }
+
+/* --- Écran d'introduction ------------------------------------ */
+.intro h1 { margin-bottom: 12px; }
+.intro .texte + .texte { margin-top: 10px; }
+.rappel {
+  display: flex; gap: 12px; align-items: flex-start;
+  margin-top: 18px; padding: 14px 16px; border-radius: 12px;
+  background: var(--se-blue-50); border: 1px solid var(--se-blue-200);
+}
+.rappel svg { flex: 0 0 auto; width: 44px; height: 44px; }
+.rappel p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--se-ink-2); }
+.rappel b { color: var(--se-ink); font-weight: 600; }
+
+/* --- Progression --------------------------------------------- */
+.progression { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.progression__ligne { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--se-ink-2); }
+.progression__ligne span:last-child { color: var(--se-ink-3); font-weight: 500; }
+.barre { height: 6px; border-radius: 999px; background: var(--se-blue-100); overflow: hidden; }
+.barre > span { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--se-blue); transition: width .5s var(--ease); }
+
+/* --- Consigne + triangle ------------------------------------- */
+.consigne { margin: 0 0 6px; font-size: clamp(17px, 4.4vw, 21px); font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+.consigne .alpha { font-family: var(--math); font-style: italic; font-size: 1.15em; color: var(--se-blue); }
+.aide-clic { margin: 0 0 8px; font-size: 13px; color: var(--se-ink-3); }
+
+.scene { position: relative; margin: 0 -6px; transition: opacity .25s ease, transform .25s ease; }
+.scene.sortie { opacity: 0; transform: translateY(6px); }
+.scene svg { display: block; width: 100%; height: auto; touch-action: manipulation; }
+
+/* Le triangle : traits fins, zones de clic larges et invisibles */
+.trait { fill: none; stroke: var(--se-ink); stroke-width: 3.2; stroke-linecap: round; transition: stroke .3s ease, stroke-width .3s ease; }
+.zone  { fill: none; stroke: transparent; stroke-width: 44; stroke-linecap: round; cursor: pointer; outline: none; pointer-events: stroke; }
+.cote.attente .zone { cursor: default; }
+@media (hover: hover) and (pointer: fine) { .cote:not(.attente):hover .trait { stroke: var(--se-blue); } }
+.cote:focus-visible .trait { stroke: var(--se-blue); stroke-width: 4.5; }
+.cote.juste .trait { stroke: var(--se-ok); stroke-width: 4.6; }
+.cote.faux  .trait { stroke: var(--se-err); stroke-width: 4.2; }
+
+.sommet { font-family: var(--math); font-style: italic; font-size: 24px; fill: var(--se-ink-2); text-anchor: middle; dominant-baseline: central; }
+.angle-droit { fill: none; stroke: var(--se-ink-2); stroke-width: 1.8; stroke-linejoin: round; transition: stroke .3s, stroke-width .3s; }
+.angle-droit.insiste { stroke: var(--se-blue); stroke-width: 3; animation: pulse 1.6s ease-in-out 2; }
+.arc { fill: none; stroke: var(--se-blue); stroke-width: 2.4; stroke-linecap: round; }
+.arc.dessine { stroke-dasharray: 200; stroke-dashoffset: 200; animation: draw .7s var(--ease) .15s forwards; }
+.arc.insiste { stroke-width: 3.6; animation: pulse 1.6s ease-in-out 2; }
+.alpha-lbl { font-family: var(--math); font-style: italic; font-size: 30px; fill: var(--se-blue); text-anchor: middle; dominant-baseline: central; }
+.alpha-lbl.insiste { animation: pulse 1.6s ease-in-out 2; }
+@keyframes draw  { to { stroke-dashoffset: 0; } }
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+
+/* --- Feedback ------------------------------------------------ */
+.retour-eleve { min-height: 96px; margin-top: 8px; }
+.message {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px; border-radius: 12px; border: 1px solid transparent;
+  animation: rise .35s var(--ease);
+}
+.message__icone { flex: 0 0 28px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; }
+.message__icone svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.message p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--se-ink-2); }
+.message p b { display: block; margin-bottom: 2px; font-size: 15.5px; }
+.message--juste { background: var(--se-ok-100); border-color: #BFE8D0; }
+.message--juste .message__icone { background: var(--se-ok); color: #fff; }
+.message--juste p b { color: var(--se-ok-700); }
+.message--aide { background: var(--se-blue-50); border-color: var(--se-blue-200); }
+.message--aide .message__icone { background: var(--se-blue-100); color: var(--se-blue-700); }
+.message--aide p b { color: var(--se-blue-700); }
+.message .alpha { font-family: var(--math); font-style: italic; font-size: 1.15em; }
+.suite { margin-top: 14px; display: none; }
+.suite.visible { display: flex; }
+
+/* --- Écran final --------------------------------------------- */
+.fin h2 { margin-bottom: 18px; }
+.bilan { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 480px) { .bilan { grid-template-columns: 1fr 1fr; } }
+.bilan__carte { padding: 16px 18px; border-radius: 12px; border: 1px solid var(--se-line); background: var(--se-bg); }
+.bilan__carte--ok { background: var(--se-ok-100); border-color: #BFE8D0; }
+.bilan__nombre { display: block; font-size: 32px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+.bilan__carte--ok .bilan__nombre { color: var(--se-ok-700); }
+.bilan__carte--aide .bilan__nombre { color: var(--se-blue-700); }
+.bilan__libelle { display: block; margin-top: 6px; font-size: 13.5px; color: var(--se-ink-2); line-height: 1.4; }
+.fin .texte { margin-top: 14px; }
+
+/* =============================================================
+   5. PIED, ENTRÉE, MOUVEMENT RÉDUIT
+   ============================================================= */
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; padding: 22px 2px 0; font-size: 12.5px; color: var(--se-ink-3); }
+.js .reveal { opacity: 0; transform: translateY(10px); }
+.js.is-ready .reveal { animation: rise .8s var(--ease) var(--d, 0ms) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .js .reveal { opacity: 1; transform: none; }
+  .arc.dessine { stroke-dashoffset: 0; }
+  .scene.sortie { opacity: 1; transform: none; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <div class="top reveal" style="--d:0ms">
+    <a class="brand" href="index.html" aria-label="Stud'Éval — accueil">
+      <svg viewBox="0 0 22 18" aria-hidden="true">
+        <rect x="0"   y="10" width="5" height="8"  rx="1.2" fill="#93B4FD"/>
+        <rect x="8.5" y="5"  width="5" height="13" rx="1.2" fill="#6091FA"/>
+        <rect x="17"  y="0"  width="5" height="18" rx="1.2" fill="#2F63F5"/>
+      </svg>
+      Stud’Éval
+    </a>
+    <span class="badge">Première Bac Pro</span>
+  </div>
+
+  <a class="retour reveal" style="--d:40ms" href="trigonometrie.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    Retour à la trigonométrie
+  </a>
+  <p class="contexte reveal" style="--d:80ms">Trigonométrie · Je m’entraîne · Exercice 1</p>
+
+  <main class="cadre reveal" style="--d:140ms">
+
+    <!-- ===================== INTRODUCTION ===================== -->
+    <section class="ecran intro actif" id="ecran-intro" aria-labelledby="titre-intro">
+      <h1 id="titre-intro">Repérer les côtés d’un triangle rectangle</h1>
+      <p class="texte">Pour répondre, <b>clique directement sur le bon côté</b> du triangle.</p>
+      <p class="texte">Dix questions, un feedback à chaque réponse.</p>
+      <div class="rappel">
+        <svg viewBox="0 0 44 44" aria-hidden="true">
+          <path d="M6 36 L38 36 L38 10 Z" fill="none" stroke="#4A5878" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M32 36 v-6 h6" fill="none" stroke="#4A5878" stroke-width="1.6"/>
+          <path d="M16 36 A10 10 0 0 0 13.9 29.7" fill="none" stroke="#2F63F5" stroke-width="2"/>
+          <text x="20" y="32" font-family="Times New Roman, serif" font-style="italic" font-size="11" fill="#2F63F5">α</text>
+        </svg>
+        <p><b>Attention :</b> le côté adjacent et le côté opposé <b>changent selon l’angle <span class="alpha" style="font-family:var(--math);font-style:italic">α</span></b>. Repère d’abord où est <span style="font-family:var(--math);font-style:italic;color:var(--se-blue)">α</span>, puis raisonne à partir de lui.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" type="button" id="btn-commencer">Commencer
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================== QUESTION ===================== -->
+    <section class="ecran" id="ecran-question" aria-live="polite">
+      <div class="progression">
+        <div class="progression__ligne"><span id="prog-texte">Question 1 sur 10</span><span>Exercice 1</span></div>
+        <div class="barre" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="prog-barre"><span></span></div>
+      </div>
+      <p class="consigne" id="consigne"></p>
+      <p class="aide-clic">Clique sur un côté du triangle.</p>
+      <div class="scene" id="scene"></div>
+      <div class="retour-eleve" id="retour-eleve" aria-live="polite"></div>
+      <div class="suite" id="suite">
+        <button class="btn" type="button" id="btn-suivant">Question suivante
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================== FIN ===================== -->
+    <section class="ecran fin" id="ecran-fin" aria-labelledby="titre-fin">
+      <h2 id="titre-fin">Exercice terminé</h2>
+      <div class="bilan">
+        <div class="bilan__carte bilan__carte--ok">
+          <span class="bilan__nombre" id="bilan-ok">0 / 10</span>
+          <span class="bilan__libelle">réussies du premier coup</span>
+        </div>
+        <div class="bilan__carte bilan__carte--aide">
+          <span class="bilan__nombre" id="bilan-aide">0</span>
+          <span class="bilan__libelle">trouvées après une aide</span>
+        </div>
+      </div>
+      <p class="texte" id="bilan-phrase"></p>
+      <div class="actions">
+        <button class="btn" type="button" id="btn-recommencer">Recommencer l’exercice</button>
+        <a class="btn btn--secondaire" href="trigonometrie.html">Retour à la trigonométrie</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot reveal" style="--d:240ms">
+    <span>Une application conçue par ton professeur.</span>
+    <span>Première Bac Pro · ERA · TEBE · TMA</span>
+  </footer>
+</div>
+
+<script>
+/* =============================================================
+   EXERCICE 1 — Repérer hypoténuse, côté adjacent et côté opposé
+   Organisation :
+     A. Données (formes de triangles, textes de consigne et de feedback)
+     B. Géométrie (sommets, côtés, réponse correcte selon l'angle α)
+     C. Rendu SVG du triangle
+     D. Déroulé (tirage des 10 questions, clics, feedback, progression)
+     E. Bilan
+   Les parties B et C sont réutilisables pour les exercices suivants.
+   ============================================================= */
+(function () {
+'use strict';
+
+/* ------------------------------------------------------------
+   A. DONNÉES
+   ------------------------------------------------------------ */
+/* Une forme = angle droit en R, premier côté de longueur a dans la direction
+   theta (degrés, sens SVG), second côté de longueur b perpendiculaire.
+   theta 0/90/180/270 : côtés horizontaux et verticaux, angle droit dans un coin.
+   theta 135 / 315 : hypoténuse horizontale (angle droit en haut, ou en bas). */
+const FORMES = [
+  { theta: 0,   a: 1.6, b: 1.0 },
+  { theta: 90,  a: 1.0, b: 1.5 },
+  { theta: 180, a: 1.4, b: 0.9 },
+  { theta: 270, a: 0.9, b: 1.5 },
+  { theta: 135, a: 1.3, b: 1.0 },
+  { theta: 0,   a: 1.0, b: 1.4 },
+  { theta: 180, a: 1.0, b: 1.7 },
+  { theta: 315, a: 1.1, b: 1.3 },
+  { theta: 90,  a: 1.6, b: 1.0 },
+  { theta: 270, a: 1.3, b: 1.1 },
+];
+
+const TYPES = {
+  hypotenuse: {
+    consigne: 'Clique sur l’hypoténuse.',
+    juste:    'L’hypoténuse est toujours le côté opposé à l’angle droit.',
+    aide:     'Repère d’abord l’angle droit : l’hypoténuse est le côté qui est en face.',
+  },
+  adjacent: {
+    consigne: 'Clique sur le côté adjacent à l’angle <span class="alpha">α</span>.',
+    juste:    'Ce côté touche l’angle <span class="alpha">α</span> et ce n’est pas l’hypoténuse.',
+    aide:     'Pars de l’angle <span class="alpha">α</span>. Le côté adjacent le touche, mais ce n’est jamais l’hypoténuse.',
+  },
+  oppose: {
+    consigne: 'Clique sur le côté opposé à l’angle <span class="alpha">α</span>.',
+    juste:    'Ce côté est en face de l’angle <span class="alpha">α</span>.',
+    aide:     'Regarde l’angle <span class="alpha">α</span> : quel côté se trouve juste en face de lui ?',
+  },
+};
+const NB_QUESTIONS = 10;
+const REPARTITION = ['hypotenuse','hypotenuse','hypotenuse','hypotenuse','adjacent','adjacent','adjacent','oppose','oppose','oppose'];
+
+/* ------------------------------------------------------------
+   B. GÉOMÉTRIE
+   Sommets : R = angle droit, P = R + a·d1, Q = R + b·d2.
+   Côtés : nommés par leurs deux sommets. La réponse se déduit des
+   sommets et de l'angle de référence, jamais de l'orientation.
+   ------------------------------------------------------------ */
+function sommets(forme) {
+  const t = forme.theta * Math.PI / 180;
+  const d1 = { x: Math.cos(t), y: Math.sin(t) };
+  const d2 = { x: Math.sin(t), y: -Math.cos(t) };       // d1 tourné de 90°
+  return {
+    R: { x: 0, y: 0 },
+    P: { x: forme.a * d1.x, y: forme.a * d1.y },
+    Q: { x: forme.b * d2.x, y: forme.b * d2.y },
+  };
+}
+/* Les trois côtés d'un triangle rectangle en R */
+function cotes() {
+  return [
+    { id: 'PQ', ext: ['P', 'Q'] },   // hypoténuse : ne contient pas R
+    { id: 'RP', ext: ['R', 'P'] },
+    { id: 'RQ', ext: ['R', 'Q'] },
+  ];
+}
+/* Réponse correcte pour un type de question et un angle de référence (P ou Q) */
+function reponse(type, ref) {
+  const autre = ref === 'P' ? 'Q' : 'P';
+  if (type === 'hypotenuse') return 'PQ';
+  if (type === 'adjacent')   return 'R' + ref;     // touche α et l'angle droit
+  if (type === 'oppose')     return 'R' + autre;   // en face de α
+  throw new Error('type inconnu');
+}
+
+/* ------------------------------------------------------------
+   C. RENDU SVG
+   ------------------------------------------------------------ */
+const VB = { w: 640, h: 440 }, MARGE = 70;
+function projeter(forme) {
+  const s = sommets(forme);
+  const xs = Object.values(s).map(p => p.x), ys = Object.values(s).map(p => p.y);
+  const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
+  const k = Math.min((VB.w - 2 * MARGE) / (maxx - minx), (VB.h - 2 * MARGE) / (maxy - miny));
+  const ox = (VB.w - k * (maxx - minx)) / 2 - k * minx, oy = (VB.h - k * (maxy - miny)) / 2 - k * miny;
+  const S = {};
+  for (const n in s) S[n] = { x: ox + k * s[n].x, y: oy + k * s[n].y };
+  return S;
+}
+const f = n => n.toFixed(1);
+const norm = v => { const l = Math.hypot(v.x, v.y) || 1; return { x: v.x / l, y: v.y / l }; };
+const vec = (a, b) => ({ x: b.x - a.x, y: b.y - a.y });
+
+/* Marque d'angle droit (carré) en R, le long des deux côtés */
+function carreAngleDroit(S) {
+  const u = norm(vec(S.R, S.P)), v = norm(vec(S.R, S.Q)), c = 20;
+  const p1 = { x: S.R.x + c * u.x, y: S.R.y + c * u.y };
+  const p2 = { x: p1.x + c * v.x,  y: p1.y + c * v.y };
+  const p3 = { x: S.R.x + c * v.x, y: S.R.y + c * v.y };
+  return `M${f(p1.x)} ${f(p1.y)} L${f(p2.x)} ${f(p2.y)} L${f(p3.x)} ${f(p3.y)}`;
+}
+/* Arc de l'angle α au sommet ref, entre le côté vers R et l'hypoténuse */
+function arcAlpha(S, ref) {
+  const V = S[ref], autre = ref === 'P' ? 'Q' : 'P';
+  const u = norm(vec(V, S.R)), w = norm(vec(V, S[autre])), r = 40;
+  const a1 = { x: V.x + r * u.x, y: V.y + r * u.y }, a2 = { x: V.x + r * w.x, y: V.y + r * w.y };
+  const sweep = (u.x * w.y - u.y * w.x) > 0 ? 1 : 0;
+  const bis = norm({ x: u.x + w.x, y: u.y + w.y });
+  const angle = Math.acos(Math.max(-1, Math.min(1, u.x * w.x + u.y * w.y)));
+  const d = 40 + 22 + (angle < 0.7 ? 8 : 0);                   // l'étiquette un peu plus loin si l'angle est aigu
+  return { d: `M${f(a1.x)} ${f(a1.y)} A${r} ${r} 0 0 ${sweep} ${f(a2.x)} ${f(a2.y)}`,
+           lbl: { x: V.x + d * bis.x, y: V.y + d * bis.y } };
+}
+/* Lettre d'un sommet, posée vers l'extérieur du triangle */
+function posLettre(S, n) {
+  const g = { x: (S.R.x + S.P.x + S.Q.x) / 3, y: (S.R.y + S.P.y + S.Q.y) / 3 };
+  const u = norm(vec(g, S[n]));
+  return { x: S[n].x + 36 * u.x, y: S[n].y + 36 * u.y };
+}
+
+function rendreTriangle(forme, ref, lettres) {
+  const S = projeter(forme);
+  const arc = arcAlpha(S, ref);
+  const cotesSvg = cotes().map(c => {
+    const A = S[c.ext[0]], B = S[c.ext[1]];
+    const nom = `côté ${lettres[c.ext[0]]}${lettres[c.ext[1]]}`;
+    return `<g class="cote" data-cote="${c.id}" tabindex="0" role="button" aria-label="${nom}">
+      <line class="zone"  x1="${f(A.x)}" y1="${f(A.y)}" x2="${f(B.x)}" y2="${f(B.y)}"/>
+      <line class="trait" x1="${f(A.x)}" y1="${f(A.y)}" x2="${f(B.x)}" y2="${f(B.y)}"/>
+    </g>`;
+  }).join('');
+  const lettresSvg = ['R', 'P', 'Q'].map(n => {
+    const p = posLettre(S, n);
+    return `<text class="sommet" x="${f(p.x)}" y="${f(p.y)}">${lettres[n]}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${VB.w} ${VB.h}" role="img" aria-label="Triangle rectangle avec un angle α marqué">
+    <path class="angle-droit" data-angle-droit d="${carreAngleDroit(S)}"/>
+    <path class="arc dessine" data-arc d="${arc.d}"/>
+    <text class="alpha-lbl" data-alpha x="${f(arc.lbl.x)}" y="${f(arc.lbl.y)}">α</text>
+    ${cotesSvg}
+    ${lettresSvg}
+  </svg>`;
+}
+
+/* ------------------------------------------------------------
+   D. DÉROULÉ
+   ------------------------------------------------------------ */
+const melanger = t => { const a = t.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function tirerQuestions() {
+  const types = melanger(REPARTITION);
+  const refs = melanger(['P','P','P','P','P','Q','Q','Q','Q','Q']);   // α tantôt sur un angle aigu, tantôt sur l'autre
+  const formes = melanger(FORMES);
+  return types.map((type, i) => {
+    const lettres = melanger(['A', 'B', 'C']);
+    return { type, ref: refs[i], forme: formes[i], lettres: { R: lettres[0], P: lettres[1], Q: lettres[2] }, bonne: reponse(type, refs[i]) };
+  });
+}
+
+const $ = id => document.getElementById(id);
+const ecrans = { intro: $('ecran-intro'), question: $('ecran-question'), fin: $('ecran-fin') };
+const ui = { prog: $('prog-texte'), barre: $('prog-barre'), consigne: $('consigne'), scene: $('scene'), retour: $('retour-eleve'), suite: $('suite'), suivant: $('btn-suivant') };
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let questions = [], index = 0, essais = 0, verrou = false;
+const bilan = { premierCoup: 0, apresAide: 0 };
+
+function montrer(nom) {
+  for (const k in ecrans) ecrans[k].classList.toggle('actif', k === nom);
+  window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
+function demarrer() {
+  questions = tirerQuestions();
+  index = 0; bilan.premierCoup = 0; bilan.apresAide = 0;
+  montrer('question');
+  afficherQuestion(true);
+}
+
+function afficherQuestion(premiere) {
+  const q = questions[index];
+  essais = 0; verrou = false;
+  ui.prog.textContent = `Question ${index + 1} sur ${NB_QUESTIONS}`;
+  ui.barre.setAttribute('aria-valuenow', index);
+  ui.barre.firstElementChild.style.width = `${(index / NB_QUESTIONS) * 100}%`;
+  ui.retour.innerHTML = '';
+  ui.suite.classList.remove('visible');
+
+  const poser = () => {
+    ui.consigne.innerHTML = TYPES[q.type].consigne;
+    ui.scene.innerHTML = rendreTriangle(q.forme, q.ref, q.lettres);
+    ui.scene.querySelectorAll('.cote').forEach(g => {
+      g.addEventListener('click', () => repondre(g));
+      g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); repondre(g); } });
+    });
+    ui.scene.classList.remove('sortie');
+  };
+  if (premiere || reduceMotion) poser();
+  else { ui.scene.classList.add('sortie'); setTimeout(poser, 260); }
+}
+
+function repondre(g) {
+  if (verrou) return;
+  const q = questions[index];
+  const choix = g.dataset.cote;
+  essais++;
+  if (choix === q.bonne) {
+    verrou = true;
+    ui.scene.querySelectorAll('.cote').forEach(c => c.classList.add('attente'));
+    g.classList.add('juste');
+    if (essais === 1) bilan.premierCoup++; else bilan.apresAide++;
+    ui.retour.innerHTML = message('juste', 'Exact !', TYPES[q.type].juste);
+    ui.suite.classList.add('visible');
+    ui.suivant.focus({ preventScroll: true });
+  } else {
+    g.classList.add('faux');
+    setTimeout(() => g.classList.remove('faux'), 900);
+    ui.retour.innerHTML = message('aide', 'Pas encore.', TYPES[q.type].aide);
+    if (essais >= 2) insister(q.type);                 // à partir de la 2e erreur : on guide l'œil
+  }
+}
+function insister(type) {
+  const cibles = type === 'hypotenuse' ? ['[data-angle-droit]'] : ['[data-arc]', '[data-alpha]'];
+  cibles.forEach(s => { const el = ui.scene.querySelector(s); el.classList.remove('insiste'); void el.getBoundingClientRect(); el.classList.add('insiste'); });
+}
+function message(sorte, titre, texte) {
+  const icone = sorte === 'juste'
+    ? '<svg viewBox="0 0 24 24"><path d="M5 12l5 5L19 7"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M12 7v5M12 16h.01"/></svg>';
+  return `<div class="message message--${sorte}"><span class="message__icone" aria-hidden="true">${icone}</span><p><b>${titre}</b>${texte}</p></div>`;
+}
+
+function suivante() {
+  index++;
+  if (index >= NB_QUESTIONS) { terminer(); return; }
+  afficherQuestion(false);
+}
+
+/* ------------------------------------------------------------
+   E. BILAN
+   ------------------------------------------------------------ */
+function terminer() {
+  $('bilan-ok').textContent = `${bilan.premierCoup} / ${NB_QUESTIONS}`;
+  $('bilan-aide').textContent = String(bilan.apresAide);
+  const p = bilan.premierCoup;
+  $('bilan-phrase').innerHTML =
+    p === NB_QUESTIONS ? 'Sans faute : tu repères les trois côtés du premier coup, quel que soit l’angle <span class="alpha" style="font-family:var(--math);font-style:italic">α</span>.'
+    : p >= 7 ? 'Bien : les côtés sont repérés. Pour les autres, relis le feedback des questions travaillées et recommence.'
+    : 'Le réflexe à prendre : d’abord l’angle droit pour l’hypoténuse, puis l’angle <span class="alpha" style="font-family:var(--math);font-style:italic">α</span> pour le reste. Recommence une fois.';
+  montrer('fin');
+}
+
+$('btn-commencer').addEventListener('click', demarrer);
+$('btn-recommencer').addEventListener('click', demarrer);
+ui.suivant.addEventListener('click', suivante);
+
+requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.add('is-ready')));
+
+/* Contrôle interne (console) : pour chaque forme et chaque angle de référence,
+   l'hypoténuse ne contient pas R, l'adjacent contient R et α, l'opposé contient R et l'autre sommet. */
+FORMES.forEach(fm => ['P','Q'].forEach(ref => {
+  const autre = ref === 'P' ? 'Q' : 'P';
+  console.assert(!reponse('hypotenuse', ref).includes('R'), 'hypoténuse', fm, ref);
+  console.assert(reponse('adjacent', ref).includes('R') && reponse('adjacent', ref).includes(ref), 'adjacent', fm, ref);
+  console.assert(reponse('oppose', ref).includes('R') && reponse('oppose', ref).includes(autre), 'opposé', fm, ref);
+}));
+})();
+</script>
+</body>
+</html>
